@@ -48,12 +48,12 @@ def main(args):
     tb_writer = SummaryWriter("./output/{}/{}/{}/logs/".format(args.model, args.expname, args.dataset)\
                           +timestamp) if args.visual else None
 
-    config=getattr(configs, 'config_'+args.model)()
+    config = getattr(configs, 'config_'+args.model)()
 
     # instantiate the dmm
     model = getattr(models, args.model)(config)
     model = model.cuda()
-    if args.reload_from>=0:
+    if args.reload_from >= 0:
         load_model(model, args.reload_from)
 
     train_set=PolyphonicDataset(args.data_path+'train.pkl')
@@ -75,13 +75,14 @@ def main(args):
         n_slices=0
         loss_records={}
         while True:
-            try: x, x_rev, x_lens = next(train_data_iter)                  
+            try: x, x_rev, x_lens = next(train_data_iter)
             except StopIteration: break # end of epoch
             x, x_rev, x_lens = gVar(x), gVar(x_rev), gVar(x_lens)
 
             if config['anneal_epochs'] > 0 and epoch < config['anneal_epochs']: # compute the KL annealing factor
                 min_af = config['min_anneal']
-                kl_anneal = min_af+(1.0-min_af)*(float(i_batch+epoch*n_iters+1)/float(config['anneal_epochs']*n_iters))
+                # train mainly by the reconstruction loss at first, then train by both to refine prior(state prediction) model
+                kl_anneal = min_af+(1.0 - min_af) * (float(i_batch+epoch*n_iters+1) / float(config['anneal_epochs']*n_iters))
             else:
                 kl_anneal = 1.0 # by default the KL annealing factor is unity
 
@@ -100,6 +101,7 @@ def main(args):
         if args.visual:
             for k, v in loss_records.items():
                 tb_writer.add_scalar(k, v, epoch)
+
         # do evaluation on test and validation data and report results
         if (epoch+1) % args.test_freq == 0:
             save_model(model, epoch)

@@ -94,13 +94,13 @@ class DHMM(nn.Module):
             # (posterior) give the further observation and last state estimate the next : q(z_t | z_{t-1}, x_{t:T})
             z_t, z_mu, z_logvar = self.postnet(z_prev, rnn_out[:,t,:])
 
-            # compute KL divergence
+            # compute KL divergence (kl loss)
             kl_states[:,t] = self.kl_div(z_mu, z_logvar, z_prior_mu, z_prior_logvar)
 
             # compute observation using the generation model : p(x_t|z_t)
             logit_x_t = self.emitter(z_t).contiguous()
 
-            # compute loss
+            # compute reconstruction loss
             rec_loss = nn.BCEWithLogitsLoss(reduction='none')(logit_x_t.view(-1), x[:,t,:].contiguous().view(-1)).view(batch_size, -1)
             rec_losses[:,t] = rec_loss.mean(dim=1)
 

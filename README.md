@@ -9,6 +9,12 @@ Adopted from https://github.com/uber/pyro/tree/dev/examples/dmm
 
 - observations (for dataset)
 
+## Run
+
+```
+python train.py
+```
+
 
 ## Dataset
 
