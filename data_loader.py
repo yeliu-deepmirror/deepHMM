@@ -24,25 +24,31 @@ import torch.utils.data as data
 class PolyphonicDataset(data.Dataset):
     def __init__(self, filepath):
         # 1. Initialize file path or list of file names.
-        """read training sequences(list of int array) from a pickle file"""
-        print("loading data...")
+        """read training sequences(list of int array) from a pickle file
+            all the sequence has the same format size = (160, 88)
+            the valid size of the sequence is recorded in "seq_lens"
+        """
+        print("Loading data from", filepath, "...")
         f= open(filepath, "rb")
         data = pickle.load(f)
         self.seqs = data['sequences']
         self.seqlens = data['seq_lens']
         self.data_len = len(self.seqs)
-        print("{} entries".format(self.data_len))
+        assert len(self.seqs) == self.seqlens.shape[0]
+        print("  {} entries".format(self.data_len))
 
     def __getitem__(self, offset):
-        seq=self.seqs[offset].astype('float32')
-        rev_seq= seq.copy()
+        seq = self.seqs[offset].astype('float32')
+        # rev_seq is the reverse of the sequence
+        rev_seq = seq.copy()
         rev_seq[0:len(seq), :] = seq[(len(seq)-1)::-1, :]
-        seq_len=self.seqlens[offset].astype('int64')
+
+        seq_len = self.seqlens[offset].astype('int64')
         return seq, rev_seq, seq_len
 
     def __len__(self):
         return self.data_len
-   
+
 
 class SyntheticDataset(data.Dataset):
     def __init__(self, filepath):
@@ -67,5 +73,3 @@ class SyntheticDataset(data.Dataset):
 
     def __len__(self):
         return self.data_len
-
-

@@ -68,9 +68,10 @@ def reverse_sequence(seqs, seq_lens):
     batch_size, max_seq_len, dim = seqs.size()
     rev_seqs = seqs.new_zeros(seqs.size())
     for b in range(batch_size):
-        T = seq_lens[b]
-        time_slice = torch.arange(T-1, -1, -1, device=seqs.device)
+        # reverse for each batch
+        seq_length = seq_lens[b]
+        # make the reversed indices
+        time_slice = torch.arange(seq_length-1, -1, -1, device=seqs.device)
         rev_seq = torch.index_select(seqs[b, :, :], 0, time_slice)
-        rev_seqs[b, 0:T, :] = rev_seq
+        rev_seqs[b, 0:seq_length, :] = rev_seq
     return rev_seqs
-
